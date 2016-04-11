@@ -1,5 +1,10 @@
 package ram_utils
 
+import (
+	"log"
+	"time"
+)
+
 const RAM_API_VER = "7.5.2.4"
 const REPO_URL = "/internal/repository"
 const OSLC_BASE = "/oslc"
@@ -25,4 +30,10 @@ var OSLC_JSON_HEADER_V1 = map[string]string{
 
 var RESPONSE_FORMAT = map[string]string{
 	"json": "application/json",
+}
+
+func Trace(msg string) func() {
+	start := time.Now()
+	log.Printf("enter %s", msg)
+	return func() { log.Printf("exit %s (%s)", msg, time.Since(start)) }
 }

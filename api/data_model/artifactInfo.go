@@ -2,6 +2,7 @@ package data_model
 
 import (
 	"fmt"
+	"github.com/Sirupsen/logrus"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -9,7 +10,7 @@ import (
 )
 
 type ArtifactInfo struct {
-	content_len int64
+	content_len int
 	name        string
 	mod_time    string
 }
@@ -24,7 +25,7 @@ func NewArtifactInfo(header *http.Header) *ArtifactInfo {
 	current_len := size_regexp.FindString(file_header)
 	file_size, err := strconv.Atoi(strings.Split(current_len, "=")[1])
 	if err != nil {
-		//TODO you need to handle error
+		logrus.Error("Fail to parse file size.")
 	}
 	fmt.Printf("content-length string: %d\n", file_size)
 	file_name := name_regexp.FindString(file_header)

@@ -22,12 +22,12 @@ type AbstractClient interface {
 type RAMClient struct {
 }
 
-func (ram *RAMClient) GetContent(url string, uid string, pwd string, header map[string]string) (io.ReadCloser, error) {
+func (ram *RAMClient) GetContent(url string, uid string, pwd string, header map[string]string) (*http.Response, error) {
 	resp, err := ram.do_request(url, uid, pwd, header, ram_utils.M_GET, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
-	return resp.Body, err
+	return resp, err
 }
 
 func (ram *RAMClient) Head(url string, uid string, pwd string, header map[string]string) (*http.Response, error) {
@@ -104,22 +104,21 @@ func (ram *RAMClient) Get(url string, uid string, pwd string, header map[string]
 	var r interface{}
 	ram.HandleResp(resp, &r, format)
 	repo_map := r.(map[string]interface{})
-
-	for k, v := range repo_map {
-		switch vv := v.(type) {
-		case string:
-			fmt.Println(k, "is string", vv)
-		case int:
-			fmt.Println(k, "is int", vv)
-		case []interface{}:
-			fmt.Println(k, "is an array:")
-			for i, u := range vv {
-				fmt.Println(i, u)
-			}
-		default:
-			fmt.Println(k, "is of a type I don't know how to handle")
-		}
-	}
+	//	for k, v := range repo_map {
+	//		switch vv := v.(type) {
+	//		case string:
+	//			fmt.Println(k, "is string", vv)
+	//		case int:
+	//			fmt.Println(k, "is int", vv)
+	//		case []interface{}:
+	//			fmt.Println(k, "is an array:")
+	//			for i, u := range vv {
+	//				fmt.Println(i, u)
+	//			}
+	//		default:
+	//			fmt.Println(k, "is of a type I don't know how to handle")
+	//		}
+	//	}
 
 	return repo_map, nil
 }
@@ -127,6 +126,7 @@ func (ram *RAMClient) Get(url string, uid string, pwd string, header map[string]
 //internal get function to perform GET oslc servies
 func (ram *RAMClient) do_request(url_str string, uid string, pwd string, header map[string]string, method string, body io.ReadCloser) (*http.Response, error) {
 	//the url passed in is supposed to be RAM war url
+	fmt.Printf("%s: %s\n", method, url_str)
 	req, err := http.NewRequest(method, url_str, body)
 	if err != nil {
 		log.Fatal(err)
@@ -137,27 +137,28 @@ func (ram *RAMClient) do_request(url_str string, uid string, pwd string, header 
 		req.Header.Add(k, v)
 	}
 	//add authentication
+	//	fmt.Printf("%s:%s\n", uid, pwd);
 	req.SetBasicAuth(uid, pwd)
 
-	fmt.Printf("Request to : %s\n", url_str)
-	for k, v := range req.Header {
-		fmt.Printf("%s: %s\n", k, v)
-	}
-
+	//	fmt.Printf("Request to : %s\n", url_str)
+	//	for k, v := range req.Header {
+	//		fmt.Printf("%s: %s\n", k, v)
+	//	}
 	http_client := &http.Client{}
 	resp, err := http_client.Do(req)
 	if err != nil {
 		log.Fatal(err)
 		return nil, err
 	}
+	fmt.Printf("Resp: %d\n", resp.StatusCode)
 	return resp, nil
 }
 
 func (ram *RAMClient) HandleResp(resp *http.Response, r interface{}, format string) error {
-	fmt.Printf("Response returned with code: %i\n", resp.StatusCode)
+	fmt.Printf("Response returned with code: %d\n", resp.StatusCode)
 	defer resp.Body.Close()
 	con, err := ioutil.ReadAll(resp.Body)
-	fmt.Printf("%s", con)
+	//	fmt.Printf("%s", con)
 	if err != nil {
 		return err
 	}
@@ -169,6 +170,5 @@ func (ram *RAMClient) HandleResp(resp *http.Response, r interface{}, format stri
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
